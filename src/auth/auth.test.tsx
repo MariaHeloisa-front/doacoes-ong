@@ -1,10 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { criarAuthFalso, sessaoFalsa } from '../test/supabaseFalso'
+import { criarAuthFalso, criarEquipeFalsa, sessaoFalsa } from '../test/supabaseFalso'
 
 const authFalso = criarAuthFalso()
-vi.mock('../lib/supabase', () => ({ supabase: { auth: authFalso } }))
+const equipeFalsa = criarEquipeFalsa()
+vi.mock('../lib/supabase', () => ({ supabase: { auth: authFalso, from: equipeFalsa.from } }))
 
 const { AuthProvider } = await import('./AuthProvider')
 const { RotaProtegida } = await import('./RotaProtegida')
@@ -36,6 +37,8 @@ function montar(rotaInicial: string) {
 beforeEach(() => {
   authFalso.sessaoAtual = null
   authFalso.signInWithPassword.mockReset()
+  equipeFalsa.membro = true
+  equipeFalsa.erro = null
 })
 
 test('sem sessão, acessar /doacoes leva à tela de login', async () => {
@@ -115,5 +118,24 @@ test('Sair encerra a sessão e volta para o login', async () => {
 test('com sessão, abrir /login redireciona para /doacoes', async () => {
   authFalso.sessaoAtual = sessaoFalsa
   montar('/login')
+  expect(await screen.findByText('Lista de doações')).toBeInTheDocument()
+})
+
+test('logado mas fora da lista da equipe: avisa e não mostra o conteúdo', async () => {
+  authFalso.sessaoAtual = sessaoFalsa
+  equipeFalsa.membro = false
+  montar('/doacoes')
+  expect(await screen.findByRole('heading', { name: 'Acesso ainda não liberado' })).toBeInTheDocument()
+  expect(screen.getByText(/equipe@ong\.org/)).toBeInTheDocument()
+  expect(screen.queryByText('Lista de doações')).not.toBeInTheDocument()
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: 'Sair' }))
+  expect(await screen.findByLabelText('E-mail')).toBeInTheDocument()
+})
+
+test('falha ao verificar a equipe não trava o app (o banco continua protegendo)', async () => {
+  authFalso.sessaoAtual = sessaoFalsa
+  equipeFalsa.erro = { message: 'Failed to fetch' }
+  montar('/doacoes')
   expect(await screen.findByText('Lista de doações')).toBeInTheDocument()
 })

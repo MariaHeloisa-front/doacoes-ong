@@ -221,3 +221,44 @@ Documentos de apoio:
 - **GitHub:** repositório público na conta da cliente, criado pelo `gh`.
 - **Vercel:** a cliente conecta o repositório pelo site da Vercel e cadastra as duas variáveis. O `vercel.json` redireciona qualquer rota para o `index.html`, porque sem isso recarregar `/painel` dá 404 (o app tem uma página só, e as rotas existem apenas no navegador).
 - Toda a configuração está no README, para que qualquer pessoa consiga subir o projeto de novo.
+
+---
+
+## Correções após a revisão final
+
+Um revisor independente leu o projeto inteiro. Não encontrou nada crítico e apontou 5 pontos importantes, todos corrigidos. Cada correção foi feita primeiro com um teste que falhava e depois com a mudança no código.
+
+### 1. Lista da equipe no banco (segurança)
+- **Problema:** as regras permitiam acesso a *qualquer usuário logado*. O cadastro público de contas vem **ligado** no Supabase. Se alguém esquecesse de desligar, qualquer pessoa na internet criaria uma conta (a URL e a chave `anon` estão no site, que é público) e leria nome, telefone e endereço dos doadores.
+- **Decisão:** nova tabela `equipe`. As regras das doações exigem `public.eh_equipe()`, ou seja, que o usuário esteja nessa lista. Ter conta não basta.
+- **Por quê:** a proteção deixa de depender de uma chave no painel que pode ser esquecida.
+- **Detalhes:**
+  - `eh_equipe()` é `security definer`: consulta a lista sem que cada usuário possa ver a lista inteira.
+  - Cada pessoa vê apenas o próprio registro em `equipe`. O app usa isso para mostrar "Acesso ainda não liberado" em vez de uma lista vazia sem explicação.
+  - A lista é mantida pelo administrador no SQL Editor (README, passo 4). Não há tela para isso, porque mexer nela é raro e é algo sensível.
+  - Se a verificação da equipe falhar por rede, o app não trava. A segurança real continua no banco.
+- `npm run verificar:rls` agora também pode conferir que um usuário da equipe está liberado (`VERIFICAR_EMAIL` / `VERIFICAR_SENHA`, que não começam com `VITE_` e, portanto, nunca vão para o navegador).
+
+### 2. Endereço de um CEP anterior podia ser salvo
+- **Problema:** com o CEP A, o endereço era preenchido. Corrigido para o CEP B, que não foi encontrado, o endereço de A continuava nos campos e podia ser salvo, levando a retirada ao lugar errado.
+- **Decisão:** ao buscar um CEP diferente, o endereço que **veio do CEP anterior** é apagado. O endereço digitado à mão não é apagado (existe teste para isso também).
+
+### 3. "Tente novamente" sem efeito
+- **Problema:** com o serviço de CEP fora do ar, não havia como tentar de novo sem apagar e redigitar um dígito.
+- **Decisão:** depois de uma falha, sair do campo CEP refaz a busca, como previa o design.
+
+### 4. Sessão expirada
+- **Problema:** a mensagem era "verifique sua conexão", o que é enganoso. Depois de entrar de novo, a pessoa caía na lista, não na tela em que estava.
+- **Decisão:** erros de token (`PGRST301`/`302`/`303` ou "JWT") mostram "Sua sessão expirou. Clique em "Sair" e entre novamente.". O login devolve a pessoa para a tela de onde veio.
+- **Não feito:** guardar o rascunho do formulário no navegador. Isso guardaria dados pessoais de doadores no `sessionStorage`, e a sessão do Supabase se renova sozinha, então o caso é raro.
+
+### 5. Tela em branco sem as variáveis
+- **Problema:** sem `VITE_SUPABASE_URL` ou `VITE_SUPABASE_ANON_KEY`, o app quebrava antes de aparecer, deixando uma página branca.
+- **Decisão:** `main.tsx` confere as variáveis antes de carregar o app. Se faltar alguma, mostra "Sistema não configurado" com o nome da variável e o lembrete de fazer *Redeploy* na Vercel. As variáveis entram no build, então cadastrá-las sem fazer novo deploy não adianta.
+
+### Pontos menores registrados, não corrigidos agora
+- Trocar o status de um mesmo cartão duas vezes muito rápido, com falha de rede no meio, pode deixar a tela diferente do banco. É raro, e recarregar a página resolve.
+- A regra de `update` permite que um membro da equipe altere qualquer coluna, não só o status. A equipe é confiável e o app só altera o status.
+- Se a pessoa digitar o endereço *enquanto* a busca do CEP ainda responde, a resposta sobrescreve o que foi digitado.
+- Qualquer erro 400 no login aparece como "E-mail ou senha incorretos.".
+- O painel não se atualiza sozinho: é preciso recarregar a página.

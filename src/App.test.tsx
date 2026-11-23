@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react'
-import { criarAuthFalso, sessaoFalsa } from './test/supabaseFalso'
+import { criarAuthFalso, criarEquipeFalsa, sessaoFalsa } from './test/supabaseFalso'
 
 const authFalso = criarAuthFalso()
-vi.mock('./lib/supabase', () => ({ supabase: { auth: authFalso } }))
+const equipeFalsa = criarEquipeFalsa()
+vi.mock('./lib/supabase', () => ({ supabase: { auth: authFalso, from: equipeFalsa.from } }))
 const { default: App } = await import('./App')
 
 beforeEach(() => {

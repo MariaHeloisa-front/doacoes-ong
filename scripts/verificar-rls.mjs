@@ -52,3 +52,31 @@ if (problemas.length > 0) {
 console.log('OK: acesso anônimo bloqueado (leitura, cadastro e alteração).')
 console.log(`   leitura → ${leitura.error ? 'erro: ' + leitura.error.message : '0 linhas'}`)
 console.log(`   cadastro → erro: ${insercao.error.message}`)
+
+// Verificação opcional: um usuário da equipe consegue entrar e está liberado.
+// Defina VERIFICAR_EMAIL e VERIFICAR_SENHA no .env.local para ativar.
+const email = process.env.VERIFICAR_EMAIL
+const senha = process.env.VERIFICAR_SENHA
+if (!email || !senha) {
+  console.log('(dica: defina VERIFICAR_EMAIL e VERIFICAR_SENHA para conferir também um usuário da equipe)')
+  process.exit(0)
+}
+const membro = createClient(url, chave, { auth: { persistSession: false } })
+const login = await membro.auth.signInWithPassword({ email, password: senha })
+if (login.error) {
+  console.error(`FALHA: não foi possível entrar como ${email}: ${login.error.message}`)
+  process.exit(1)
+}
+const naEquipe = await membro.from('equipe').select('user_id').eq('user_id', login.data.user.id).maybeSingle()
+const leituraMembro = await membro.from('doacoes').select('id').limit(1)
+await membro.auth.signOut()
+if (naEquipe.error || !naEquipe.data) {
+  console.error(`FALHA: ${email} entrou, mas NÃO está na tabela "equipe". Inclua com:`)
+  console.error(`   insert into public.equipe (user_id) select id from auth.users where email = '${email}';`)
+  process.exit(1)
+}
+if (leituraMembro.error) {
+  console.error(`FALHA: ${email} está na equipe mas não conseguiu ler doações: ${leituraMembro.error.message}`)
+  process.exit(1)
+}
+console.log(`OK: ${email} está na equipe e consegue ler as doações.`)
