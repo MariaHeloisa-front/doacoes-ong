@@ -161,3 +161,29 @@ Documentos de apoio:
 ### Acessibilidade
 - Todo campo tem `<label>` ligado ao input. Erros ficam ligados ao campo (`aria-describedby`, `aria-invalid`). As mensagens de CEP e de erro usam `role="alert"`, para que leitores de tela anunciem.
 - Telefone e CEP usam `inputMode="numeric"`, que abre o teclado numérico no celular.
+
+---
+
+## Etapa 7 — Lista com filtros e mudança de status
+
+### Filtros aplicados no banco e guardados na URL
+- **Decisão:** os filtros "Tipo" e "Status" viram parâmetros da URL (`/doacoes?tipo=Roupas&status=Em%20triagem`), e a consulta ao Supabase já vem filtrada.
+- **Por quê:** recarregar a página não perde o filtro, e dá para mandar o link para alguém da equipe ("olha o que está em triagem"). Filtrar no banco também evita trazer doações que não serão mostradas.
+- Valores inválidos na URL (por exemplo, `?tipo=Livros`) são ignorados, e a lista mostra tudo.
+- Se a pessoa trocar o filtro antes da resposta chegar, a resposta antiga é descartada.
+
+### Cartões em vez de tabela
+- Cada doação aparece num cartão com tipo, data, doador, telefone formatado, descrição, endereço completo em uma linha e o seletor de status.
+- **Por quê:** funciona bem tanto no computador quanto no celular (a equipe pode usar na rua, numa retirada). Uma tabela com 7 colunas fica ilegível em tela pequena.
+- A borda colorida indica o status, para leitura rápida.
+- Ordem: mais recentes primeiro.
+
+### Mudança de status direto no cartão
+- **Decisão:** um seletor em cada cartão. A mudança aparece na hora (atualização otimista) e é salva em seguida. Se o salvamento falhar, o status **volta ao anterior** e aparece "Não foi possível alterar o status. Tente novamente.".
+- **Por quê:** é a ação mais frequente do dia a dia. Não deve exigir abrir outra tela nem confirmar.
+- Qualquer direção é permitida (de "Entregue" para "Em triagem", por exemplo), para corrigir cliques errados.
+- Se o status for barrado pelo banco (sessão expirada), a etapa 4 garante que isso vira erro. Então a tela nunca mostra um status que não foi salvo.
+
+### Estados da tela
+- "Carregando…", "Nenhuma doação encontrada com esses filtros." e mensagem de erro de carga com `role="alert"`.
+- O "carregando" é calculado a partir dos filtros (o resultado guarda a qual filtro pertence), em vez de ser ligado e desligado dentro do efeito. Isso segue a recomendação atual do React e evita renderizações em cascata.

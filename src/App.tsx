@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthProvider'
 import { LoginPage } from './auth/LoginPage'
 import { RotaProtegida } from './auth/RotaProtegida'
 import { FormularioDoacao } from './doacoes/FormularioDoacao'
+import { ListaDoacoes } from './doacoes/ListaDoacoes'
 import { Layout } from './layout/Layout'
 
 export default function App() {
@@ -18,7 +19,7 @@ export default function App() {
               </RotaProtegida>
             }
           >
-            <Route path="/doacoes" element={<p>Em construção.</p>} />
+            <Route path="/doacoes" element={<ListaDoacoes />} />
             <Route path="/doacoes/nova" element={<FormularioDoacao />} />
             <Route path="/painel" element={<p>Em construção.</p>} />
           </Route>
