@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "verificar:rls": "node --env-file=.env.local scripts/verificar-rls.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",

@@ -81,3 +81,32 @@ Documentos de apoio:
 - O ViaCEP responde `{"erro": "true"}` (texto, não booleano) para CEP inexistente. As duas formas são tratadas.
 - CEPs gerais de cidade pequena vêm sem rua e sem bairro. Esses campos chegam vazios e a pessoa completa.
 - Por isso rua, bairro, cidade e UF continuam editáveis depois da busca.
+
+---
+
+## Etapa 4 — Banco de dados, segurança e acesso aos dados
+
+### Tabela única `doacoes`
+- O SQL fica em `supabase/migrations/20261123000000_criar_doacoes.sql` e é aplicado manualmente no SQL Editor (não há Supabase CLI no projeto). Ele pode ser executado de novo sem efeito colateral (`if not exists`, `drop policy if exists`).
+- As regras do formulário se repetem no banco com `check`: telefone com 10 ou 11 dígitos, CEP com 8, UF com 2 letras maiúsculas, campos obrigatórios não vazios, tipo e status dentro da lista.
+- `criado_por` guarda automaticamente (`auth.uid()`) qual usuário da equipe registrou a doação. Isso permite auditoria futura sem custo agora.
+- Índices em `created_at` (ordenação da lista) e em `(tipo, status)` (filtros).
+
+### Segurança com RLS
+- **Decisão:** RLS ligada. Usuários `authenticated` podem **ler, cadastrar e alterar**. O papel `anon` (sem login) não tem nenhuma política e ainda perde todos os privilégios (`revoke all`).
+- **Sem política de DELETE:** ninguém apaga doações pelo app. Isso evita perder histórico por engano, e apagar não está nos requisitos.
+- **Por quê:** o repositório é público e a chave `anon` vai para o navegador. A proteção precisa morar no banco, não na tela.
+- **Todos da equipe têm o mesmo acesso:** não há papéis diferentes, porque o requisito não pede.
+
+### Armadilha tratada: update bloqueado não dá erro
+- Quando a RLS barra um `update` (por exemplo, com a sessão expirada), o Supabase **não devolve erro**: só não altera nenhuma linha. Por isso `atualizarStatus` pede de volta as linhas alteradas e trata "zero linhas" como falha. Sem isso, a tela mostraria o status trocado sem nada ter sido salvo.
+
+### Camada `repositorio.ts`
+- Todo acesso ao banco passa por quatro funções (`listarDoacoes`, `criarDoacao`, `atualizarStatus`, `listarResumo`). As telas não falam com o Supabase diretamente.
+- **Por quê:** concentra as mensagens de erro amigáveis (`ErroRepositorio`) e facilita testar as telas com dados simulados.
+- Filtros por tipo e status são aplicados **no banco** (`eq`), não no navegador. Assim, só trafega o que vai aparecer na tela.
+
+### Verificação da RLS: `npm run verificar:rls`
+- Usa só a URL e a chave `anon` do `.env.local`. Sem login, tenta ler, cadastrar e alterar, e precisa ser bloqueado nas três.
+- Roda manualmente contra o projeto real e **não** faz parte dos testes automáticos, que continuam offline e sem segredos.
+- A prova mais forte é o cadastro, porque com a tabela vazia uma leitura "0 linhas" não diz muito. Vale rodar de novo depois que houver doações cadastradas.
