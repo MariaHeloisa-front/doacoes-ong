@@ -5,6 +5,7 @@ import { RotaProtegida } from './auth/RotaProtegida'
 import { FormularioDoacao } from './doacoes/FormularioDoacao'
 import { ListaDoacoes } from './doacoes/ListaDoacoes'
 import { Layout } from './layout/Layout'
+import { Painel } from './painel/Painel'
 
 export default function App() {
   return (
@@ -21,7 +22,7 @@ export default function App() {
           >
             <Route path="/doacoes" element={<ListaDoacoes />} />
             <Route path="/doacoes/nova" element={<FormularioDoacao />} />
-            <Route path="/painel" element={<p>Em construção.</p>} />
+            <Route path="/painel" element={<Painel />} />
           </Route>
           <Route path="*" element={<Navigate to="/doacoes" replace />} />
         </Routes>

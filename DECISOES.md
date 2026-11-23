@@ -187,3 +187,22 @@ Documentos de apoio:
 ### Estados da tela
 - "Carregando…", "Nenhuma doação encontrada com esses filtros." e mensagem de erro de carga com `role="alert"`.
 - O "carregando" é calculado a partir dos filtros (o resultado guarda a qual filtro pertence), em vez de ser ligado e desligado dentro do efeito. Isso segue a recomendação atual do React e evita renderizações em cascata.
+
+---
+
+## Etapa 8 — Painel
+
+### Contagem feita no navegador
+- **Decisão:** o painel busca só as colunas `tipo` e `status` de todas as doações (`listarResumo`) e conta no navegador (`agregar`).
+- **Por quê:** o volume de uma ONG (centenas ou poucos milhares de registros) é pequeno, e duas colunas de texto pesam poucos KB. Assim não é preciso criar *views* ou funções SQL extras que a cliente teria que aplicar no banco.
+- **Quando mudar:** se o volume passar de dezenas de milhares, troque por uma *view* com `group by` no Supabase. A tela não muda, só a função `listarResumo`.
+
+### Todas as categorias sempre aparecem
+- Tipos e status sem doações aparecem com **0**, em vez de sumirem. A pessoa vê que "não há brinquedos", em vez de achar que o painel está quebrado.
+
+### Barras em CSS, sem biblioteca de gráficos
+- Cada linha tem rótulo, uma barra proporcional ao maior valor do bloco e o número.
+- **Por quê:** para comparar 5 tipos e 3 status, uma barra horizontal simples é a forma mais legível. Uma biblioteca de gráficos (~100 KB+) não se paga aqui. O número sempre aparece ao lado, e a barra é só apoio visual (`aria-hidden`).
+
+### Cada linha leva à lista filtrada
+- Clicar em "Móveis" ou "Em triagem" abre a lista já filtrada (`/doacoes?tipo=Moveis`). O painel vira um atalho de trabalho, não só um número para olhar. Isso foi possível porque os filtros vivem na URL (etapa 7).
