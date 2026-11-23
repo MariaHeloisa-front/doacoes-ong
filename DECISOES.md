@@ -110,3 +110,26 @@ Documentos de apoio:
 - Usa só a URL e a chave `anon` do `.env.local`. Sem login, tenta ler, cadastrar e alterar, e precisa ser bloqueado nas três.
 - Roda manualmente contra o projeto real e **não** faz parte dos testes automáticos, que continuam offline e sem segredos.
 - A prova mais forte é o cadastro, porque com a tabela vazia uma leitura "0 linhas" não diz muito. Vale rodar de novo depois que houver doações cadastradas.
+
+---
+
+## Etapa 5 — Login da equipe e rotas protegidas
+
+### Supabase Auth com e-mail e senha
+- **Por quê:** já vem com o Supabase, guarda a sessão no navegador e renova o token sozinho. Não é preciso nenhum serviço extra.
+- **Sem cadastro pelo site:** quem administra cria as contas no painel do Supabase, com o cadastro público desligado. Assim ninguém de fora cria conta.
+- **Sem "esqueci minha senha" nesta versão:** exigiria configurar envio de e-mail (SMTP) e URLs de retorno. Por enquanto, quem administra redefine a senha pelo painel (passo a passo no README).
+
+### Todas as telas atrás do login
+- `RotaProtegida` envolve tudo, exceto `/login`. Sem sessão, a pessoa vai para o login. Enquanto a sessão é verificada, aparece "Carregando…", o que evita piscar a tela de login para quem já está logado.
+- Quem já está logado e abre `/login` vai direto para a lista.
+- Qualquer endereço desconhecido leva para `/doacoes`.
+- **Importante:** isso é conforto de navegação, não segurança. A segurança real está na RLS do banco (etapa 4).
+
+### Mensagens de login
+- Senha ou e-mail errados: "E-mail ou senha incorretos." A mensagem não diz qual dos dois está errado, de propósito.
+- Falha de rede: "Não foi possível entrar. Verifique sua conexão e tente novamente."
+- O botão fica desabilitado ("Entrando…") durante o envio, para evitar cliques repetidos.
+
+### Organização
+- `useAuth` fica em um arquivo separado do `AuthProvider`, por exigência do *fast refresh* do Vite (um arquivo de componente deve exportar só componentes).
