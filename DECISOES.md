@@ -31,3 +31,24 @@ Documentos de apoio:
 ### Variáveis de ambiente
 - Só a URL e a chave **anon** do Supabase vão para o front-end (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). A chave `anon` é pública por natureza; quem protege os dados é a RLS.
 - `.env.local` fica fora do git. O `.env.example` documenta o que precisa ser preenchido.
+
+---
+
+## Etapa 2 — Modelo da doação, máscaras e validações
+
+### Tipos e status como lista fixa única
+- **Decisão:** os valores aceitos ficam em uma constante TypeScript (`TIPOS`, `STATUS` em `src/dominio/doacao.ts`), e o banco tem um `check` com os mesmos valores.
+- **Por quê:** uma única fonte para a interface. Incluir um tipo novo é trocar uma linha aqui e uma no banco, sem migração de `enum` do Postgres (que é chata de alterar).
+- **Detalhe:** o valor gravado é `Moveis` (sem acento, para evitar problemas de codificação em filtros e URLs). Na tela aparece "Móveis" (`ROTULO_TIPO`).
+
+### Telefone e CEP gravados só com dígitos
+- **Decisão:** a máscara (`(81) 99999-8888`, `50030-230`) existe só na tela. No banco ficam apenas os números.
+- **Por quê:** facilita busca, validação e exibição em qualquer formato. Aceita fixo (10 dígitos) e celular (11).
+
+### Número do endereço como texto
+- **Por quê:** endereços reais têm "s/n", "120A", "Lote 3".
+
+### Validação no formulário e no banco
+- **Decisão:** `validarDoacao` dá mensagens amigáveis por campo, e o banco repete as regras com `check`.
+- **Por quê:** o formulário orienta quem digita. O banco garante a integridade mesmo se alguém contornar a tela.
+- Espaços nas pontas são removidos. Um campo só com espaços conta como vazio. Complemento vazio vira `null`. UF é convertida para maiúsculas.
