@@ -62,6 +62,56 @@ test('CEP não encontrado mostra mensagem clara', async () => {
   expect(await screen.findByText('CEP não encontrado. Confira o número ou preencha o endereço manualmente.')).toBeInTheDocument()
 })
 
+test('trocar para um CEP não encontrado apaga o endereço do CEP anterior', async () => {
+  buscarCep.mockResolvedValueOnce(AURORA).mockResolvedValueOnce({
+    ok: false,
+    erro: 'nao_encontrado',
+    mensagem: 'CEP não encontrado. Confira o número ou preencha o endereço manualmente.',
+  })
+  const user = userEvent.setup()
+  render(<FormularioDoacao />)
+  await user.type(campo('CEP'), '50030230')
+  await waitFor(() => expect(campo('Rua')).toHaveValue('Rua da Aurora'))
+  await user.clear(campo('CEP'))
+  await user.type(campo('CEP'), '99999999')
+  await screen.findByText('CEP não encontrado. Confira o número ou preencha o endereço manualmente.')
+  expect(campo('Rua')).toHaveValue('')
+  expect(campo('Bairro')).toHaveValue('')
+  expect(campo('Cidade')).toHaveValue('')
+  expect(campo('UF')).toHaveValue('')
+})
+
+test('endereço digitado à mão antes do CEP não é apagado se a busca falhar', async () => {
+  buscarCep.mockResolvedValue({
+    ok: false,
+    erro: 'indisponivel',
+    mensagem: 'Não foi possível consultar o CEP agora. Tente novamente ou preencha o endereço manualmente.',
+  })
+  const user = userEvent.setup()
+  render(<FormularioDoacao />)
+  await user.type(campo('Rua'), 'Rua Manual')
+  await user.type(campo('CEP'), '50030230')
+  await screen.findByText(/Não foi possível consultar o CEP agora/)
+  expect(campo('Rua')).toHaveValue('Rua Manual')
+})
+
+test('serviço de CEP fora do ar: sair do campo tenta de novo', async () => {
+  buscarCep
+    .mockResolvedValueOnce({
+      ok: false,
+      erro: 'indisponivel',
+      mensagem: 'Não foi possível consultar o CEP agora. Tente novamente ou preencha o endereço manualmente.',
+    })
+    .mockResolvedValueOnce(AURORA)
+  const user = userEvent.setup()
+  render(<FormularioDoacao />)
+  await user.type(campo('CEP'), '50030230')
+  await screen.findByText(/Não foi possível consultar o CEP agora/)
+  await user.tab()
+  await waitFor(() => expect(campo('Rua')).toHaveValue('Rua da Aurora'))
+  expect(buscarCep).toHaveBeenCalledTimes(2)
+})
+
 test('CEP incompleto ao sair do campo mostra CEP inválido sem consultar', async () => {
   const user = userEvent.setup()
   render(<FormularioDoacao />)

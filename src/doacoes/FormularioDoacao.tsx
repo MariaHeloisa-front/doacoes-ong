@@ -68,6 +68,8 @@ export function FormularioDoacao() {
   const enviandoRef = useRef(false)
   const cepAtualRef = useRef('')
   const cepBuscadoRef = useRef('')
+  /** CEP cujo endereço está preenchido nos campos ('' = nenhum, ou digitado à mão). */
+  const enderecoDoCepRef = useRef('')
   const numeroRef = useRef<HTMLInputElement>(null)
 
   function alterar(campo: Campo, valor: string) {
@@ -79,15 +81,23 @@ export function FormularioDoacao() {
     cepBuscadoRef.current = digitos
     setMensagemCep(null)
     setBuscandoCep(true)
+    // Endereço preenchido por OUTRO CEP não vale mais: apaga para não salvar endereço errado.
+    if (enderecoDoCepRef.current && enderecoDoCepRef.current !== digitos) {
+      enderecoDoCepRef.current = ''
+      setForm((f) => ({ ...f, logradouro: '', bairro: '', cidade: '', uf: '' }))
+    }
     const resultado = await buscarCep(digitos)
     // O CEP pode ter mudado enquanto esperávamos: ignora respostas antigas.
     if (cepAtualRef.current !== digitos) return
     setBuscandoCep(false)
     if (!resultado.ok) {
       setMensagemCep(resultado.mensagem)
+      // Permite tentar de novo ao sair do campo.
+      cepBuscadoRef.current = ''
       return
     }
     const { logradouro, bairro, cidade, uf } = resultado.endereco
+    enderecoDoCepRef.current = digitos
     setForm((f) => ({ ...f, logradouro, bairro, cidade, uf }))
     setErros((e) => ({ ...e, logradouro: undefined, bairro: undefined, cidade: undefined, uf: undefined }))
     numeroRef.current?.focus()
@@ -109,6 +119,7 @@ export function FormularioDoacao() {
   function sairDoCep() {
     const digitos = cepAtualRef.current
     if (digitos.length > 0 && digitos.length < 8) setMensagemCep(MENSAGEM_CEP_INVALIDO)
+    else if (digitos.length === 8 && cepBuscadoRef.current !== digitos) void consultarCep(digitos)
   }
 
   async function enviar(e: FormEvent) {
@@ -129,6 +140,7 @@ export function FormularioDoacao() {
       setMensagemCep(null)
       cepAtualRef.current = ''
       cepBuscadoRef.current = ''
+      enderecoDoCepRef.current = ''
       setAviso({ tipo: 'sucesso', texto: 'Doação registrada com sucesso.' })
     } catch (erro) {
       setAviso({ tipo: 'erro', texto: erro instanceof ErroRepositorio ? erro.message : ERRO_SALVAR })
