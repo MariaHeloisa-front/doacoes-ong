@@ -63,6 +63,7 @@ Ainda não há "esqueci minha senha" no sistema. Quem administra faz assim: **Au
 1. Em [vercel.com/new](https://vercel.com/new), importe este repositório do GitHub. O Vercel detecta o Vite sozinho.
 2. Em **Environment Variables**, cadastre `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 3. Clique em **Deploy**.
+   > As variáveis entram no momento do build. Se você cadastrar ou alterar alguma **depois** do deploy, vá em **Deployments → ⋯ → Redeploy**. Se faltar alguma, o site mostra a tela "Sistema não configurado" dizendo qual.
 4. No Supabase, em **Authentication → URL Configuration**, coloque o endereço gerado pela Vercel em **Site URL**.
 
 O arquivo [`vercel.json`](vercel.json) faz qualquer endereço (`/doacoes`, `/painel`…) abrir o app, para que recarregar a página não dê erro 404.
