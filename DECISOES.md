@@ -262,3 +262,15 @@ Um revisor independente leu o projeto inteiro. Não encontrou nada crítico e ap
 - Se a pessoa digitar o endereço *enquanto* a busca do CEP ainda responde, a resposta sobrescreve o que foi digitado.
 - Qualquer erro 400 no login aparece como "E-mail ou senha incorretos.".
 - O painel não se atualiza sozinho: é preciso recarregar a página.
+
+---
+
+## Publicação (23/11/2026)
+- Site no ar: **https://doacoes-ong.vercel.app**, com deploy automático a cada `push` na `main`.
+- Verificado após a publicação:
+  - sem login, `/doacoes` leva a `/login`;
+  - abrir `/painel` direto responde normalmente (o `rewrite` funciona);
+  - `npm run verificar:rls` contra o banco real: leitura e cadastro anônimos recusados com `permission denied`;
+  - a tabela `equipe` e a função `eh_equipe()` estão aplicadas.
+- **Lição do deploy:** a primeira publicação mostrou "Sistema não configurado", porque as variáveis ainda não estavam cadastradas no build. Depois de cadastrá-las e fazer *Redeploy*, funcionou. A tela de diagnóstico criada na revisão final mostrou o problema na hora.
+- **Chave nova do Supabase:** o projeto usa a *publishable key* (`sb_publishable_…`), que substitui a `anon` e funciona igual com o `supabase-js`. A variável continua se chamando `VITE_SUPABASE_ANON_KEY`.

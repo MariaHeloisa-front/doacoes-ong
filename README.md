@@ -8,6 +8,8 @@ Sistema web para a equipe da ONG registrar e acompanhar doações (roupas, alime
 - **Login** exclusivo para a equipe.
 - **Painel** com a quantidade de doações por tipo e por status.
 
+🌐 **Site publicado:** https://doacoes-ong.vercel.app (acesso só para a equipe)
+
 Stack: React + TypeScript (Vite), Supabase (Postgres + Auth), publicado na Vercel.
 Cada decisão técnica está explicada em **[DECISOES.md](DECISOES.md)**.
 
