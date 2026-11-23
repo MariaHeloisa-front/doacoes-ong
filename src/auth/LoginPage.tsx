@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './useAuth'
 
 export function LoginPage() {
   const { sessao, carregando, entrar } = useAuth()
+  const location = useLocation()
+  const destino = (location.state as { de?: string } | null)?.de ?? '/doacoes'
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
 
   if (carregando) return <p className="carregando">Carregando…</p>
-  if (sessao) return <Navigate to="/doacoes" replace />
+  if (sessao) return <Navigate to={destino} replace />
 
   async function enviar(e: FormEvent) {
     e.preventDefault()

@@ -25,6 +25,7 @@ function montar(rotaInicial: string) {
             }
           >
             <Route path="/doacoes" element={<p>Lista de doações</p>} />
+            <Route path="/doacoes/nova" element={<p>Formulário de nova doação</p>} />
           </Route>
         </Routes>
       </AuthProvider>
@@ -74,6 +75,19 @@ test('login correto leva para /doacoes', async () => {
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
   expect(await screen.findByText('Lista de doações')).toBeInTheDocument()
   expect(authFalso.signInWithPassword).toHaveBeenCalledWith({ email: 'equipe@ong.org', password: 'certa' })
+})
+
+test('depois do login, volta para a tela que a pessoa tentou abrir', async () => {
+  authFalso.signInWithPassword.mockImplementation(async () => {
+    authFalso.emitir('SIGNED_IN', sessaoFalsa)
+    return { data: { session: sessaoFalsa, user: sessaoFalsa.user }, error: null }
+  })
+  montar('/doacoes/nova')
+  const user = userEvent.setup()
+  await user.type(await screen.findByLabelText('E-mail'), 'equipe@ong.org')
+  await user.type(screen.getByLabelText('Senha'), 'certa')
+  await user.click(screen.getByRole('button', { name: 'Entrar' }))
+  expect(await screen.findByText('Formulário de nova doação')).toBeInTheDocument()
 })
 
 test('botão Entrar fica desabilitado enquanto envia', async () => {

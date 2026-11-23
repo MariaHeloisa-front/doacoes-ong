@@ -79,7 +79,7 @@ describe('listarDoacoes', () => {
   })
 
   test('erro do Supabase vira ErroRepositorio com mensagem amigável', async () => {
-    estado.resultado = { data: null, error: { message: 'JWT expired' } }
+    estado.resultado = { data: null, error: { message: 'TypeError: Failed to fetch' } }
     const promessa = listarDoacoes({})
     await expect(promessa).rejects.toBeInstanceOf(ErroRepositorio)
     await expect(promessa).rejects.toThrow('Não foi possível carregar as doações.')
@@ -123,6 +123,20 @@ describe('atualizarStatus', () => {
     await expect(atualizarStatus('id1', 'Entregue')).rejects.toThrow(
       'Não foi possível salvar. Verifique sua conexão e tente novamente.',
     )
+  })
+})
+
+describe('sessão expirada', () => {
+  const MSG = 'Sua sessão expirou. Clique em "Sair" e entre novamente.'
+
+  test('JWT expirado ao salvar mostra mensagem de sessão, não de conexão', async () => {
+    estado.resultado = { data: null, error: { code: 'PGRST301', message: 'JWT expired' } }
+    await expect(criarDoacao(nova)).rejects.toThrow(MSG)
+  })
+
+  test('JWT inválido ao listar também', async () => {
+    estado.resultado = { data: null, error: { code: 'PGRST303', message: 'JWT expired' } }
+    await expect(listarDoacoes({})).rejects.toThrow(MSG)
   })
 })
 
