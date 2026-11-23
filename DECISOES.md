@@ -133,3 +133,31 @@ Documentos de apoio:
 
 ### Organização
 - `useAuth` fica em um arquivo separado do `AuthProvider`, por exigência do *fast refresh* do Vite (um arquivo de componente deve exportar só componentes).
+
+---
+
+## Etapa 6 — Formulário de cadastro
+
+### Busca do CEP automática
+- **Decisão:** a busca dispara sozinha quando o CEP chega a 8 dígitos. Não há botão "buscar". Ao sair do campo com o CEP incompleto, aparece "CEP inválido…".
+- **Por quê:** é um passo a menos para a equipe. Quando o endereço chega, o cursor vai direto para "Número", o próximo campo a preencher.
+- Durante a busca aparece "Buscando endereço…".
+
+### Endereço continua editável
+- Rua, bairro, cidade e UF são preenchidos pela API, mas podem ser corrigidos.
+- **Por quê:** CEPs gerais de cidade pequena vêm sem rua e bairro, a API pode estar fora do ar, e às vezes o nome oficial difere do que o doador informa. Travar os campos impediria o cadastro nesses casos.
+
+### Proteção contra resposta atrasada
+- **Situação:** a pessoa digita um CEP, percebe o erro e corrige antes da primeira busca responder. Se a resposta antiga chegasse por último, sobrescreveria o endereço certo.
+- **Decisão:** cada resposta só é aplicada se o CEP no campo ainda for o mesmo consultado. Existe teste específico, e confirmamos que ele falha sem a proteção.
+
+### Proteção contra clique duplo
+- O botão fica desabilitado ("Salvando…") e também há uma trava imediata (`useRef`). O estado do React só se atualiza no próximo render, então dois cliques muito rápidos passariam pela checagem do botão. Teste confirma que só **uma** doação é criada.
+
+### Depois de salvar
+- **Sucesso:** a mensagem "Doação registrada com sucesso." aparece e o formulário é limpo, pronto para a próxima doação. Esse é o fluxo comum de quem está registrando várias doações seguidas.
+- **Erro:** a mensagem aparece e **os dados digitados são mantidos**, para a pessoa tentar de novo sem redigitar.
+
+### Acessibilidade
+- Todo campo tem `<label>` ligado ao input. Erros ficam ligados ao campo (`aria-describedby`, `aria-invalid`). As mensagens de CEP e de erro usam `role="alert"`, para que leitores de tela anunciem.
+- Telefone e CEP usam `inputMode="numeric"`, que abre o teclado numérico no celular.
