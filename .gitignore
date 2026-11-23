@@ -29,3 +29,6 @@ dist-ssr
 
 # Rastreamento interno de execução
 .superpowers/
+
+# Capturas de tela de verificação manual
+.playwright-mcp/

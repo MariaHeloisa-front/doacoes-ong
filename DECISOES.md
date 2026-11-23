@@ -206,3 +206,18 @@ Documentos de apoio:
 
 ### Cada linha leva à lista filtrada
 - Clicar em "Móveis" ou "Em triagem" abre a lista já filtrada (`/doacoes?tipo=Moveis`). O painel vira um atalho de trabalho, não só um número para olhar. Isso foi possível porque os filtros vivem na URL (etapa 7).
+
+---
+
+## Etapa 9 — Acabamento e publicação
+
+### Visual
+- CSS próprio em um único arquivo (`src/index.css`), com variáveis de cor. Não usei framework visual, porque o app tem poucas telas e assim a dependência e o peso ficam menores.
+- Verde como cor principal, com contraste alto no texto. Status com cores fixas: azul (Recebida), laranja (Em triagem), verde (Entregue).
+- **Responsivo:** em telas abaixo de 640px, o formulário vira uma coluna, a lista vira uma coluna de cartões e o botão "Salvar" ocupa a largura toda.
+- Foco visível em todos os campos e botões, para quem navega pelo teclado.
+
+### Publicação
+- **GitHub:** repositório público na conta da cliente, criado pelo `gh`.
+- **Vercel:** a cliente conecta o repositório pelo site da Vercel e cadastra as duas variáveis. O `vercel.json` redireciona qualquer rota para o `index.html`, porque sem isso recarregar `/painel` dá 404 (o app tem uma página só, e as rotas existem apenas no navegador).
+- Toda a configuração está no README, para que qualquer pessoa consiga subir o projeto de novo.
